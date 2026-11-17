@@ -8,7 +8,7 @@ import Navbar from "@/components/Navbar";
 import dynamic from "next/dynamic";
 import { PackagePlus, UploadCloud, DollarSign, Loader2, Percent, Trash2, Ruler } from "lucide-react";
 import axios from "axios";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
@@ -123,7 +123,8 @@ export default function AddProductPage() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

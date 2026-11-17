@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import OrderTimeline from "@/components/OrderTimeline"; // <-- Timeline component import kiya
+import OrderTimeline from "@/components/OrderTimeline";
 import { motion } from "framer-motion";
 import { Package, Loader2, ShoppingBag, CheckCircle2, Clock, Truck, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -54,7 +54,8 @@ export default function MyOrdersPage() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full space-y-6">
+      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full space-y-6">
         <div className="border-b border-[#E5DFDA] pb-4">
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1A120E]">My Orders History</h1>
           <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">Track the live status of your purchases and shipping updates.</p>
@@ -116,7 +117,7 @@ export default function MyOrdersPage() {
                     <span className="text-[#8C5E73] uppercase tracking-wider text-[11px] font-semibold">Payment: {order.customerDetails?.paymentMethod || "COD"}</span>
                   </div>
 
-                  {/* 🌟 Interactive Visual Timeline Added Here */}
+                  {/* Interactive Visual Timeline */}
                   <OrderTimeline status={orderStatus} />
                 </motion.div>
               );

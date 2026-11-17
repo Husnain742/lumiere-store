@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import ProductSkeleton from "@/components/ProductSkeleton"; // <-- Skeleton component import kiya
+import ProductSkeleton from "@/components/ProductSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Sparkles, ShoppingBag, Eye, Loader2, Clock, Search, X, Heart } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 const backgroundImages = [
   "https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?q=80&w=1600&auto=format&fit=crop",
@@ -78,14 +78,14 @@ export default function Home() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] flex flex-col font-sans overflow-x-hidden">
       <Navbar />
 
-      {/* Hero Section */}
+      {/* Hero Section - Added proper pt-24 / sm:pt-28 to prevent navbar overlap */}
       <motion.section 
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative overflow-hidden pt-8 pb-16 lg:pt-16 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full"
+        className="relative overflow-hidden pt-24 sm:pt-28 pb-12 lg:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full"
       >
-        <div className="relative rounded-[2.5rem] overflow-hidden bg-[#EFEAE5] border border-[#E5DFDA] shadow-sm py-16 px-6 sm:px-12 backdrop-blur-md">
+        <div className="relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden bg-[#EFEAE5] border border-[#E5DFDA] shadow-sm py-12 sm:py-16 px-5 sm:px-12 backdrop-blur-md flex flex-col justify-center">
           <div className="absolute inset-0 z-0">
             {backgroundImages.map((img, index) => (
               <div
@@ -105,15 +105,15 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex flex-wrap items-center justify-center gap-3 mb-6"
+              className="flex flex-wrap items-center justify-center gap-2.5 mb-5"
             >
-              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#8C5E73]/10 border border-[#8C5E73]/20 text-[#8C5E73] text-xs sm:text-sm font-medium">
-                <Sparkles size={16} />
+              <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#8C5E73]/10 border border-[#8C5E73]/20 text-[#8C5E73] text-[11px] sm:text-sm font-medium">
+                <Sparkles size={14} />
                 <span>Next-Gen E-Commerce Experience</span>
               </div>
 
-              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs sm:text-sm font-semibold">
-                <Clock size={16} className="animate-pulse" />
+              <div className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-[11px] sm:text-sm font-semibold">
+                <Clock size={14} className="animate-pulse" />
                 <span>{currentTime || "Loading time..."}</span>
               </div>
             </motion.div>
@@ -122,7 +122,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
-              className="text-4xl sm:text-6xl font-serif font-normal tracking-tight leading-tight text-[#2C2420]"
+              className="text-3xl sm:text-5xl lg:text-6xl font-serif font-normal tracking-tight leading-tight text-[#2C2420]"
             >
               Discover Modern & <br />
               <span className="italic font-light text-[#8C5E73]">
@@ -134,7 +134,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
-              className="mt-6 text-base text-[#5E4E46] max-w-xl mx-auto leading-relaxed"
+              className="mt-4 sm:mt-6 text-xs sm:text-base text-[#5E4E46] max-w-xl mx-auto leading-relaxed px-2"
             >
               Explore our curated catalog featuring ultra-fast delivery, encrypted authentication, and seamless animated UI crafted for tech lovers.
             </motion.p>
@@ -143,9 +143,9 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.5 }}
-              className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link href="/products">
+              <Link href="/products" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -166,7 +166,7 @@ export default function Home() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.8 }}
-        className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow"
+        className="py-8 sm:py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow"
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 border-b border-[#E5DFDA] pb-6">
           <div>
@@ -205,7 +205,6 @@ export default function Home() {
         </div>
 
         {loading ? (
-          /* SKELETON LOADER GRID */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <ProductSkeleton key={i} />

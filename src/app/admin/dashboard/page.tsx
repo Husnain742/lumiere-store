@@ -53,6 +53,7 @@ export default function AdminDashboard() {
   
   const [activeTab, setActiveTab] = useState("overview");
   const [dateFilter, setDateFilter] = useState("7days"); // today, 7days, 30days, all
+  const [mobileAdminMenuOpen, setMobileAdminMenuOpen] = useState(false); // Mobile Menu Toggle State
 
   const [orders, setOrders] = useState<any[]>([]);
   const [orderLoading, setOrderLoading] = useState(true);
@@ -301,7 +302,6 @@ export default function AdminDashboard() {
 
   if (!session || session.user?.email !== ADMIN_EMAIL) return null;
 
-  // Filter orders based on selected date range
   const now = new Date();
   const filteredByDateOrders = orders.filter((order) => {
     const orderDate = new Date(order.createdAt || Date.now());
@@ -316,18 +316,16 @@ export default function AdminDashboard() {
       thirtyDaysAgo.setDate(now.getDate() - 30);
       return orderDate >= thirtyDaysAgo;
     }
-    return true; // "all"
+    return true;
   });
 
   const totalRevenue = filteredByDateOrders.reduce((acc, order) => acc + (order.totalAmount || 0), 0);
   const totalOrders = filteredByDateOrders.length;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   
-  // Pending actions metrics
   const pendingOrdersCount = orders.filter(o => !o.status || o.status === "Pending").length;
   const lowStockProducts = products.filter((p) => (p.stock ?? 0) < 5);
 
-  // 1. Date-wise sales aggregation for Line Chart
   const salesByDateMap: { [key: string]: number } = {};
   filteredByDateOrders.forEach((order) => {
     const dateStr = new Date(order.createdAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -338,13 +336,11 @@ export default function AdminDashboard() {
     revenue: salesByDateMap[date],
   }));
 
-  // 2. Customer-wise sales data for Bar Chart (Restored as requested!)
   const customerBarChartData = filteredByDateOrders.map((order) => ({
     name: order.customerDetails?.fullName || `#${order._id.slice(-6).toUpperCase()}`,
     totalAmount: order.totalAmount || 0,
   }));
 
-  // Category Distribution for Pie Chart
   const categoryData = products.reduce((acc: any, product: any) => {
     const cat = product.category || "General";
     acc[cat] = (acc[cat] || 0) + 1;
@@ -404,21 +400,57 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-        <main className="flex-grow p-4 sm:p-8 space-y-8 overflow-y-auto">
+       <main className="flex-grow p-4 sm:p-8 pt-20 sm:pt-24 space-y-8 overflow-y-auto">
           
-          <div className="flex md:hidden overflow-x-auto space-x-2 pb-2">
-            {["overview", "products", "orders", "coupons", "announcement", "customers", "analytics"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase whitespace-nowrap cursor-pointer transition-all ${
-                  activeTab === tab ? "bg-[#8C5E73] text-white" : "bg-[#EFEAE5] text-[#5E4E46]"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+          {/* Mobile Admin Menu Bar */}
+          <div className="md:hidden bg-[#2A1424] text-white p-4 rounded-2xl flex items-center justify-between shadow-md">
+            <div className="flex items-center space-x-2">
+              <Store size={18} className="text-[#D9C4CF]" />
+              <span className="font-serif font-bold text-sm capitalize">{activeTab}</span>
+            </div>
+            <button
+              onClick={() => setMobileAdminMenuOpen(!mobileAdminMenuOpen)}
+              className="px-3.5 py-1.5 bg-[#8C5E73] rounded-xl text-xs font-bold flex items-center space-x-1.5 cursor-pointer"
+            >
+              <LayoutDashboard size={14} />
+              <span>{mobileAdminMenuOpen ? "Close Menu" : "Admin Menu"}</span>
+            </button>
           </div>
+
+          {/* Mobile Dropdown Drawer */}
+          {mobileAdminMenuOpen && (
+            <div className="md:hidden bg-[#2A1424] text-[#EFEAE5] p-3 rounded-2xl grid grid-cols-2 gap-2 border border-[#3D2036] shadow-xl">
+              {[
+                { id: "overview", label: "Overview", icon: LayoutDashboard },
+                { id: "products", label: "Products", icon: Package },
+                { id: "orders", label: "Orders", icon: ShoppingBag },
+                { id: "coupons", label: "Coupons", icon: Tag },
+                { id: "announcement", label: "Announcement", icon: Megaphone },
+                { id: "customers", label: "Customers", icon: Users },
+                { id: "analytics", label: "Analytics", icon: BarChart3 },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileAdminMenuOpen(false);
+                    }}
+                    className={`flex items-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#8C5E73] text-white shadow-md"
+                        : "bg-[#3B1E34]/60 text-[#D9C4CF] hover:text-white"
+                    }`}
+                  >
+                    <Icon size={15} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {activeTab === "overview" && (
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -433,7 +465,6 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                  {/* Date Filter Dropdown */}
                   <div className="flex items-center bg-[#FAF7F5] border border-[#E5DFDA] rounded-full px-4 py-2 text-xs font-bold text-[#5E4E46]">
                     <Calendar size={14} className="mr-2 text-[#8C5E73]" />
                     <select 
@@ -457,7 +488,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Pending Actions Card */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-amber-50 border border-amber-200 p-5 rounded-3xl flex items-center justify-between shadow-xs">
                   <div className="flex items-center space-x-3">
@@ -488,7 +518,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Metrics Cards with Growth Indicators */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-[#EFEAE5] border border-[#E5DFDA] p-6 rounded-3xl shadow-sm flex items-center justify-between">
                   <div>
@@ -530,7 +559,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* 1. Sales Over Time Line Chart (Date-wise) */}
               <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-serif font-bold text-[#1A120E]">Sales Revenue Over Time (Date-wise)</h3>
@@ -553,7 +581,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* 2. Customer-wise Performance Bar Chart (Restored alongside the Line Chart!) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                   <h3 className="text-lg font-serif font-bold text-[#1A120E]">Sales by Customer / Order</h3>
@@ -569,7 +596,6 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Products by Category Pie Chart */}
                 <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                   <h3 className="text-lg font-serif font-bold text-[#1A120E]">Products by Category</h3>
                   <div className="h-64 w-full flex items-center justify-center">
@@ -586,7 +612,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Recent Orders Feed Table */}
               <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-serif font-bold text-[#1A120E]">Recent Orders Feed</h3>
@@ -940,7 +965,6 @@ export default function AdminDashboard() {
         </main>
       </div>
 
-      {/* Edit Product Modal */}
       <AnimatePresence>
         {editingProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
@@ -988,7 +1012,6 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* View Order Invoice Modal */}
       <AnimatePresence>
         {selectedOrder && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">

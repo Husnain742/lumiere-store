@@ -4,13 +4,13 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import ProductSkeleton from "@/components/ProductSkeleton"; // <-- Skeleton component import kiya
+import ProductSkeleton from "@/components/ProductSkeleton";
 import { Package, Loader2, X, Eye, Heart, SlidersHorizontal, ArrowUpDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCurrency } from "@/context/CurrencyContext";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 function ProductsContent() {
   const [products, setProducts] = useState<any[]>([]);
@@ -117,7 +117,8 @@ function ProductsContent() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E5DFDA] pb-6">
           <div>
             <h1 className="text-3xl font-serif font-bold text-[#1A120E]">Our Products Catalog</h1>
@@ -125,25 +126,25 @@ function ProductsContent() {
               {searchQuery ? `Search results for "${searchQuery}"` : "Explore curated luxury items with advanced filters"}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             <Link
               href="/wishlist"
-              className="bg-[#F7EBEF] hover:bg-[#8C5E73] text-[#8C5E73] hover:text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all border border-[#E5DFDA] flex items-center gap-2 cursor-pointer shadow-sm"
+              className="bg-[#F7EBEF] hover:bg-[#8C5E73] text-[#8C5E73] hover:text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2.5 rounded-full transition-all border border-[#E5DFDA] flex items-center gap-2 cursor-pointer shadow-sm flex-1 sm:flex-initial justify-center"
             >
-              <Heart size={16} className="fill-current" /> My Wishlist ({mounted ? wishlist.length : 0})
+              <Heart size={16} className="fill-current" /> Wishlist ({mounted ? wishlist.length : 0})
             </Link>
             <Link
               href="/admin/add-product"
-              className="bg-[#8C5E73] hover:bg-[#784E60] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all shadow-md shadow-[#8C5E73]/20 cursor-pointer"
+              className="bg-[#8C5E73] hover:bg-[#784E60] text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2.5 rounded-full transition-all shadow-md shadow-[#8C5E73]/20 cursor-pointer flex-1 sm:flex-initial text-center"
             >
               + Add Product
             </Link>
           </div>
         </div>
 
-        <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-6 mb-8 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl p-5 sm:p-6 mb-8 shadow-sm flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-[#8C5E73] uppercase tracking-wider mr-2 flex items-center gap-1">
+            <span className="text-xs font-bold text-[#8C5E73] uppercase tracking-wider mr-2 flex items-center gap-1 w-full sm:w-auto mb-1 sm:mb-0">
               <SlidersHorizontal size={14} /> Categories:
             </span>
             {categories.map((cat) => (
@@ -194,7 +195,6 @@ function ProductsContent() {
         </div>
 
         {loading ? (
-          /* SKELETON LOADER GRID */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <ProductSkeleton key={i} />

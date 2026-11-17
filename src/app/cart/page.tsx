@@ -6,7 +6,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import { Trash2, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 export default function CartPage() {
   const { cart, removeFromCart, addToCart, clearCart } = useCart();
@@ -29,12 +29,13 @@ export default function CartPage() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      <div className="max-w-5xl mx-auto px-4 py-12 flex-grow w-full">
+      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8 border-b border-[#E5DFDA] pb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E5DFDA] pb-6">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-[#1A120E] flex items-center space-x-3">
-              <ShoppingBag className="text-[#8C5E73]" size={32} />
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1A120E] flex items-center space-x-3">
+              <ShoppingBag className="text-[#8C5E73]" size={28} />
               <span>Shopping Cart</span>
             </h1>
             <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">
@@ -56,15 +57,15 @@ export default function CartPage() {
         </div>
 
         {cart.length === 0 ? (
-          <div className="text-center py-24 bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl shadow-sm">
-            <ShoppingBag className="mx-auto text-[#B5A59E] mb-4" size={56} />
-            <h2 className="text-xl font-serif font-bold text-[#1A120E] mb-2">Your cart is empty</h2>
+          <div className="text-center py-20 bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl shadow-sm">
+            <ShoppingBag className="mx-auto text-[#B5A59E] mb-4" size={48} />
+            <h2 className="text-lg sm:text-xl font-serif font-bold text-[#1A120E] mb-2">Your cart is empty</h2>
             <p className="text-xs text-[#5E4E46] mb-6">
               Explore our catalog and add items to your cart.
             </p>
             <Link
               href="/products"
-              className="inline-flex items-center space-x-2 bg-[#8C5E73] hover:bg-[#784E60] text-white text-sm px-6 py-3 rounded-full transition-all shadow-md shadow-[#8C5E73]/20"
+              className="inline-flex items-center space-x-2 bg-[#8C5E73] hover:bg-[#784E60] text-white text-xs sm:text-sm px-6 py-3 rounded-full transition-all shadow-md shadow-[#8C5E73]/20"
             >
               <ArrowLeft size={16} />
               <span>Start Shopping</span>
@@ -84,7 +85,7 @@ export default function CartPage() {
                 return (
                   <div
                     key={`${item._id}-${item.selectedSize}`}
-                    className="flex flex-col sm:flex-row items-center justify-between bg-[#EFEAE5] border border-[#E5DFDA] p-4 sm:p-5 rounded-3xl gap-4 shadow-sm"
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#EFEAE5] border border-[#E5DFDA] p-4 sm:p-5 rounded-3xl gap-4 shadow-sm"
                   >
                     <div className="flex items-center space-x-4 w-full sm:w-auto">
                       <div className="w-20 h-20 bg-[#FAF7F5] border border-[#E5DFDA] rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center p-2">
@@ -99,8 +100,8 @@ export default function CartPage() {
                         )}
                       </div>
 
-                      <div>
-                        <h3 className="text-base font-bold text-[#1A120E] line-clamp-1">
+                      <div className="flex-grow">
+                        <h3 className="text-sm sm:text-base font-bold text-[#1A120E] line-clamp-1">
                           {item.title}
                         </h3>
                         <p className="text-xs text-[#5E4E46] mt-0.5 font-medium">
@@ -118,7 +119,7 @@ export default function CartPage() {
                     </div>
 
                     {/* Quantity Controls & Delete */}
-                    <div className="flex items-center justify-between w-full sm:w-auto space-x-6">
+                    <div className="flex items-center justify-between w-full sm:w-auto space-x-4 pt-2 sm:pt-0 border-t sm:border-0 border-[#E5DFDA]">
                       <div className="flex items-center space-x-2 bg-[#FAF7F5] border border-[#E5DFDA] rounded-full p-1.5 shadow-inner">
                         <button
                           onClick={() => {
@@ -145,7 +146,7 @@ export default function CartPage() {
                         </button>
                       </div>
 
-                      <div className="hidden sm:flex items-center text-[#1A120E] font-serif font-extrabold text-base w-32 justify-end">
+                      <div className="hidden sm:flex items-center text-[#1A120E] font-serif font-extrabold text-base w-28 justify-end">
                         <span>{convertPrice(item.price * item.quantity)}</span>
                       </div>
 
@@ -187,7 +188,7 @@ export default function CartPage() {
               </div>
 
               <Link href="/checkout">
-                <button className="w-full bg-[#8C5E73] hover:bg-[#784E60] text-white font-medium py-3.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all text-sm cursor-pointer">
+                <button className="w-full bg-[#8C5E73] hover:bg-[#784E60] text-white font-medium py-3.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all text-sm cursor-pointer text-center block">
                   Proceed to Checkout
                 </button>
               </Link>
