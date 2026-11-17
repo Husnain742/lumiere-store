@@ -1,0 +1,200 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
+import { Trash2, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
+import { toast } from "sonner"; // <-- Sonner toast import kiya
+
+export default function CartPage() {
+  const { cart, removeFromCart, addToCart, clearCart } = useCart();
+  const { convertPrice } = useCurrency();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  // Total price calculate karne ke liye
+  const totalPrice = cart.reduce(
+    (total: number, item: any) => total + item.price * item.quantity,
+    0
+  );
+
+  return (
+    <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
+      <Navbar />
+
+      <div className="max-w-5xl mx-auto px-4 py-12 flex-grow w-full">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 border-b border-[#E5DFDA] pb-6">
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-[#1A120E] flex items-center space-x-3">
+              <ShoppingBag className="text-[#8C5E73]" size={32} />
+              <span>Shopping Cart</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">
+              Review your items before proceeding to checkout
+            </p>
+          </div>
+
+          {cart.length > 0 && (
+            <button
+              onClick={() => {
+                clearCart();
+                toast.info("Cart cleared successfully");
+              }}
+              className="text-xs text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 bg-rose-50 px-4 py-2 rounded-full transition-all cursor-pointer font-medium"
+            >
+              Clear Cart
+            </button>
+          )}
+        </div>
+
+        {cart.length === 0 ? (
+          <div className="text-center py-24 bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl shadow-sm">
+            <ShoppingBag className="mx-auto text-[#B5A59E] mb-4" size={56} />
+            <h2 className="text-xl font-serif font-bold text-[#1A120E] mb-2">Your cart is empty</h2>
+            <p className="text-xs text-[#5E4E46] mb-6">
+              Explore our catalog and add items to your cart.
+            </p>
+            <Link
+              href="/products"
+              className="inline-flex items-center space-x-2 bg-[#8C5E73] hover:bg-[#784E60] text-white text-sm px-6 py-3 rounded-full transition-all shadow-md shadow-[#8C5E73]/20"
+            >
+              <ArrowLeft size={16} />
+              <span>Start Shopping</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items List */}
+            <div className="lg:col-span-2 space-y-4">
+              {cart.map((item: any) => {
+                const imageUrl =
+                  item.image ||
+                  (Array.isArray(item.images) && item.images.length > 0
+                    ? item.images[0]
+                    : null);
+
+                return (
+                  <div
+                    key={`${item._id}-${item.selectedSize}`}
+                    className="flex flex-col sm:flex-row items-center justify-between bg-[#EFEAE5] border border-[#E5DFDA] p-4 sm:p-5 rounded-3xl gap-4 shadow-sm"
+                  >
+                    <div className="flex items-center space-x-4 w-full sm:w-auto">
+                      <div className="w-20 h-20 bg-[#FAF7F5] border border-[#E5DFDA] rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center p-2">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-[10px] text-[#8A7A72]">No Image</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <h3 className="text-base font-bold text-[#1A120E] line-clamp-1">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-[#5E4E46] mt-0.5 font-medium">
+                          Category: {item.category || "General"}
+                        </p>
+                        {item.selectedSize && item.selectedSize !== "Standard" && (
+                          <p className="text-xs text-[#8C7A72] font-semibold mt-0.5">
+                            Size: <span className="text-[#8C5E73]">{item.selectedSize}</span>
+                          </p>
+                        )}
+                        <div className="flex items-center text-[#1A120E] font-serif font-extrabold text-sm mt-1 sm:hidden">
+                          <span>{convertPrice(item.price * item.quantity)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quantity Controls & Delete */}
+                    <div className="flex items-center justify-between w-full sm:w-auto space-x-6">
+                      <div className="flex items-center space-x-2 bg-[#FAF7F5] border border-[#E5DFDA] rounded-full p-1.5 shadow-inner">
+                        <button
+                          onClick={() => {
+                            if (item.quantity > 1) {
+                              addToCart(item, -1);
+                              toast.success("Quantity updated");
+                            }
+                          }}
+                          className="p-1.5 hover:bg-[#EFEAE5] rounded-full text-[#5E4E46] transition-colors cursor-pointer"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="text-sm font-bold px-2 text-[#1A120E]">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => {
+                            addToCart(item, 1);
+                            toast.success("Quantity updated");
+                          }}
+                          className="p-1.5 hover:bg-[#EFEAE5] rounded-full text-[#5E4E46] transition-colors cursor-pointer"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+
+                      <div className="hidden sm:flex items-center text-[#1A120E] font-serif font-extrabold text-base w-32 justify-end">
+                        <span>{convertPrice(item.price * item.quantity)}</span>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          removeFromCart(item._id, item.selectedSize);
+                          toast.info("Item removed from cart");
+                        }}
+                        className="p-2 text-rose-600 hover:bg-rose-100/50 rounded-full transition-colors cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Order Summary Box */}
+            <div className="bg-[#EFEAE5] border border-[#E5DFDA] p-6 rounded-3xl h-fit shadow-sm">
+              <h3 className="text-lg font-serif font-bold text-[#1A120E] mb-4 border-b border-[#E5DFDA] pb-3">
+                Order Summary
+              </h3>
+
+              <div className="space-y-3 text-sm text-[#5E4E46] mb-6 font-medium">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="text-[#1A120E] font-bold">{convertPrice(totalPrice)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span className="text-emerald-700 font-bold">Free</span>
+                </div>
+                <div className="border-t border-[#E5DFDA] pt-3 flex justify-between text-base font-serif font-bold text-[#1A120E]">
+                  <span>Total</span>
+                  <span className="text-[#8C5E73]">{convertPrice(totalPrice)}</span>
+                </div>
+              </div>
+
+              <Link href="/checkout">
+                <button className="w-full bg-[#8C5E73] hover:bg-[#784E60] text-white font-medium py-3.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all text-sm cursor-pointer">
+                  Proceed to Checkout
+                </button>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
