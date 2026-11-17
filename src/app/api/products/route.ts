@@ -3,24 +3,43 @@ import connectDB from "@/lib/mongodb";
 import Product from "@/models/Products";
 import { redis } from "@/lib/redis";
 
+// GET: Sab products fetch karne ke liye (Redis cache ke sath)
 export async function GET() {
   try {
-    // 1. Pehle Redis Cache check karein
     const cachedProducts = await redis.get("all_products");
+    
     if (cachedProducts) {
-      return NextResponse.json({ success: true, products: cachedProducts, source: "redis-cache" }, { status: 200 });
+      const parsedProducts = typeof cachedProducts === "string" ? JSON.parse(cachedProducts) : cachedProducts;
+      return NextResponse.json({ success: true, products: parsedProducts, source: "redis-cache" }, { status: 200 });
     }
 
-    // 2. Agar cache mein nahi hai, toh MongoDB se fetch karo
     await connectDB();
     const products = await Product.find({}).sort({ createdAt: -1 });
 
-    // 3. Data ko Redis mein save kar do (5 mins expiry)
-    await redis.set("all_products", products, { ex: 300 });
+    await redis.set("all_products", JSON.stringify(products), { ex: 300 });
 
     return NextResponse.json({ success: true, products, source: "mongodb" }, { status: 200 });
   } catch (err: any) {
     console.error("Error fetching products:", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
+// POST: Naya product add karne ke liye (Ye zaroori tha!)
+export async function POST(req: Request) {
+  try {
+    await connectDB();
+    const body = await req.json();
+
+    // Naya product create karein
+    const newProduct = await Product.create(body);
+
+    // Jab naya product bane, toh Redis cache ko clear kar dein taake naya product foran list mein nazar aaye
+    await redis.del("all_products");
+
+    return NextResponse.json({ success: true, product: newProduct }, { status: 201 });
+  } catch (err: any) {
+    console.error("Error creating product:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

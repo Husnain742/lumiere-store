@@ -5,18 +5,23 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
+import dynamic from "next/dynamic";
 import { PackagePlus, UploadCloud, DollarSign, Loader2, Percent, Trash2, Ruler } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
+const CldUploadWidget = dynamic(
+  () => import("next-cloudinary").then((mod) => mod.CldUploadWidget),
+  { ssr: false }
+);
+
 export default function AddProductPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const [loading, setLoading] = useState(false);
-  const [uploadingImg, setUploadingImg] = useState(false);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -64,38 +69,6 @@ export default function AddProductPage() {
   if (!session || session.user?.email !== ADMIN_EMAIL) {
     return null;
   }
-
-  // Direct File Upload handler for Mobile & Laptop
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingImg(true);
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "your_preset";
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "your_cloud_name";
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
-
-      try {
-        const res = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-          formData
-        );
-        if (res.data.secure_url) {
-          setImagesList((prev) => [...prev, res.data.secure_url]);
-          toast.success("Image uploaded successfully! 📸");
-        }
-      } catch (err) {
-        console.error("Image upload failed:", err);
-        toast.error("Image upload failed. Check Cloudinary settings.");
-      }
-    }
-    setUploadingImg(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -317,23 +290,32 @@ export default function AddProductPage() {
                 ))}
               </div>
 
-              {/* Direct File Input for Mobile & Laptop */}
-              <label className="w-full border-2 border-dashed border-[#E5DFDA] hover:border-[#8C5E73] bg-[#FAF7F5] p-6 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all cursor-pointer group">
-                <div className="p-3 bg-[#F7EBEF] rounded-2xl text-[#8C5E73] group-hover:scale-110 transition-transform">
-                  {uploadingImg ? <Loader2 className="animate-spin" size={24} /> : <UploadCloud size={24} />}
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-[#1A120E] group-hover:text-[#8C5E73] transition-colors">
-                  {uploadingImg ? "Uploading to Cloudinary..." : "+ Click to upload product images"}
-                </span>
-                <span className="text-[10px] text-[#8A7A72] font-medium">Supports mobile camera & gallery selection</span>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
+              {/* Cloudinary Upload Widget */}
+              <CldUploadWidget
+                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                onSuccess={(result: any) => {
+                  if (result?.info?.secure_url) {
+                    setImagesList((prev) => [...prev, result.info.secure_url]);
+                    toast.success("Image uploaded to gallery! 📸");
+                  }
+                }}
+              >
+                {({ open }) => (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="w-full border-2 border-dashed border-[#E5DFDA] hover:border-[#8C5E73] bg-[#FAF7F5] p-6 rounded-2xl flex flex-col items-center justify-center space-y-2 transition-all cursor-pointer group"
+                  >
+                    <div className="p-3 bg-[#F7EBEF] rounded-2xl text-[#8C5E73] group-hover:scale-110 transition-transform">
+                      <UploadCloud size={24} />
+                    </div>
+                    <span className="text-xs sm:text-sm font-semibold text-[#1A120E] group-hover:text-[#8C5E73] transition-colors">
+                      + Click to add another angle / color image
+                    </span>
+                    <span className="text-[10px] text-[#8A7A72] font-medium">You can upload multiple photos</span>
+                  </button>
+                )}
+              </CldUploadWidget>
             </div>
 
             <div>
@@ -354,7 +336,7 @@ export default function AddProductPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={loading || uploadingImg}
+              disabled={loading}
               className="w-full mt-4 bg-[#8C5E73] hover:bg-[#784E60] text-white font-medium py-3.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all flex items-center justify-center space-x-2 text-sm cursor-pointer disabled:opacity-50"
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : <span>Publish Product with Sizes & Gallery</span>}
