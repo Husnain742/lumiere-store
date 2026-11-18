@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { Truck, ArrowLeft, Loader2, CheckCircle2, CreditCard, ShieldCheck, Lock, Tag, XCircle } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
@@ -27,7 +27,6 @@ export default function CheckoutPage() {
     paymentMethod: "cod",
   });
 
-  // Card Details State
   const [cardDetails, setCardDetails] = useState({
     cardHolder: "",
     cardNumber: "",
@@ -35,7 +34,6 @@ export default function CheckoutPage() {
     cvv: "",
   });
 
-  // Promo Coupon States
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercentage: number } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
@@ -65,7 +63,6 @@ export default function CheckoutPage() {
     }
   }, [status, router]);
 
-  // Calculations in PKR with Coupon Discount
   const subtotal = mounted ? cart.reduce((total: number, item: any) => total + item.price * item.quantity, 0) : 0;
   const discountAmount = appliedCoupon ? (subtotal * appliedCoupon.discountPercentage) / 100 : 0;
   const shippingFee = 0;
@@ -87,7 +84,6 @@ export default function CheckoutPage() {
     setCardDetails({ ...cardDetails, expiry: formatted });
   };
 
-  // Verify & Apply Coupon Code
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setCouponLoading(true);
@@ -141,10 +137,11 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      // Fixed: Secure mapping supporting _id, id, and productId to ensure stock decreases properly
       const orderPayload = {
         customerDetails: formData,
         items: cart.map((item: any) => ({
-          _id: item._id,
+          _id: item._id || item.id || item.productId,
           quantity: item.quantity,
           selectedSize: item.selectedSize || "Standard",
         })),
@@ -159,6 +156,7 @@ export default function CheckoutPage() {
       if (res.status === 201) {
         setOrderPlaced(true);
         clearCart();
+        router.refresh();
         toast.success("Order placed successfully! ✨");
       }
     } catch (err: any) {
@@ -229,7 +227,6 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Shipping Form */}
           <form onSubmit={handleCheckoutSubmit} className="lg:col-span-2 space-y-6 bg-[#EFEAE5] border border-[#E5DFDA] p-6 sm:p-8 rounded-3xl shadow-sm">
             <h2 className="text-lg font-serif font-bold text-[#1A120E] border-b border-[#E5DFDA] pb-3">
               Shipping Information
@@ -436,7 +433,7 @@ export default function CheckoutPage() {
 
             <div className="space-y-3 max-h-52 overflow-y-auto pr-2">
               {mounted && cart.map((item: any) => (
-                <div key={`${item._id}-${item.selectedSize}`} className="flex justify-between items-center text-xs text-[#5E4E46] font-medium">
+                <div key={`${item._id || item.id}-${item.selectedSize}`} className="flex justify-between items-center text-xs text-[#5E4E46] font-medium">
                   <span className="line-clamp-1 w-36">
                     {item.title} {item.selectedSize && item.selectedSize !== "Standard" ? `(${item.selectedSize})` : ""} (x{item.quantity})
                   </span>

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import dynamic from "next/dynamic";
-import { PackagePlus, UploadCloud, DollarSign, Loader2, Percent, Trash2, Ruler } from "lucide-react";
+import { PackagePlus, UploadCloud, DollarSign, Loader2, Percent, Trash2, Ruler, CheckCircle2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 
@@ -102,6 +102,8 @@ export default function AddProductPage() {
       }
 
       toast.success("Product published successfully with custom sizes! 🎉");
+      
+      // Instant State Reset without needing a full page refresh
       setTitle("");
       setDescription("");
       setPrice("");
@@ -109,6 +111,9 @@ export default function AddProductPage() {
       setImagesList([]);
       setDiscountPercentage("");
       setSaleEndDate("");
+      
+      // Next.js router refresh taake background data sync ho jaye agar zaroorat ho
+      router.refresh();
     } catch (err: any) {
       console.error("❌ [ADD PRODUCT ERROR]:", err);
       toast.error(err.response?.data?.error || err.message || "Failed to publish product");

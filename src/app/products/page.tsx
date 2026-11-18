@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import { Package, Loader2, X, Eye, Heart, SlidersHorizontal, ArrowUpDown } from "lucide-react";
@@ -13,6 +13,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { toast } from "sonner";
 
 function ProductsContent() {
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -22,13 +23,12 @@ function ProductsContent() {
 
   // Advanced Filters State
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [maxPrice, setMaxPrice] = useState<number>(300000); // Default safe high limit
-  const [sortBy, setSortBy] = useState("newest"); // 'newest', 'low-high', 'high-low'
+  const [maxPrice, setMaxPrice] = useState<number>(300000);
+  const [sortBy, setSortBy] = useState("newest");
 
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
-  // Wishlist & Currency Context hooks
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { convertPrice } = useCurrency();
 
@@ -117,7 +117,6 @@ function ProductsContent() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans">
       <Navbar />
 
-      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E5DFDA] pb-6">
           <div>
@@ -133,6 +132,16 @@ function ProductsContent() {
             >
               <Heart size={16} className="fill-current" /> Wishlist ({mounted ? wishlist.length : 0})
             </Link>
+            <button
+              onClick={() => {
+                fetchProducts();
+                router.refresh();
+                toast.success("Catalog refreshed!");
+              }}
+              className="bg-[#EFEAE5] hover:bg-[#E5DFDA] border border-[#E5DFDA] text-[#8C5E73] text-xs sm:text-sm font-medium px-4 py-2.5 rounded-full transition-all cursor-pointer shadow-xs"
+            >
+              ↻ Refresh
+            </button>
             <Link
               href="/admin/add-product"
               className="bg-[#8C5E73] hover:bg-[#784E60] text-white text-xs sm:text-sm font-medium px-4 sm:px-5 py-2.5 rounded-full transition-all shadow-md shadow-[#8C5E73]/20 cursor-pointer flex-1 sm:flex-initial text-center"

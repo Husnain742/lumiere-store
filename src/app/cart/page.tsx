@@ -3,19 +3,40 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
-import { Trash2, ShoppingBag, ArrowLeft, Plus, Minus } from "lucide-react";
+import axios from "axios";
+import { Trash2, ShoppingBag, ArrowLeft, Plus, Minus, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function CartPage() {
   const { cart, removeFromCart, addToCart, clearCart } = useCart();
   const { convertPrice } = useCurrency();
+  const router = useRouter();
+
   const [mounted, setMounted] = useState(false);
+  const [liveStockMap, setLiveStockMap] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     setMounted(true);
+    fetchLatestStock();
   }, []);
+
+  // Backend se fresh stock fetch karne ke liye taake stale data na rahe
+  const fetchLatestStock = async () => {
+    try {
+      const res = await axios.get("/api/products");
+      const products = res.data.products || [];
+      const stockDictionary: { [key: string]: number } = {};
+      products.forEach((p: any) => {
+        stockDictionary[p._id] = p.stock ?? 0;
+      });
+      setLiveStockMap(stockDictionary);
+    } catch (err) {
+      console.error("Failed to sync live stock in cart:", err);
+    }
+  };
 
   if (!mounted) return null;
 
@@ -29,7 +50,6 @@ export default function CartPage() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-[#E5DFDA] pb-6">
@@ -47,6 +67,7 @@ export default function CartPage() {
             <button
               onClick={() => {
                 clearCart();
+                router.refresh();
                 toast.info("Cart cleared successfully");
               }}
               className="text-xs text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 bg-rose-50 px-4 py-2 rounded-full transition-all cursor-pointer font-medium"
@@ -82,10 +103,20 @@ export default function CartPage() {
                     ? item.images[0]
                     : null);
 
+                // Live stock check (agar map mein hai toh woh warna item.stock)
+                const availableStock =
+                  liveStockMap[item._id] !== undefined
+                    ? liveStockMap[item._id]
+                    : item.stock ?? 99;
+
+                const isExceedingStock = item.quantity > availableStock;
+
                 return (
                   <div
                     key={`${item._id}-${item.selectedSize}`}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#EFEAE5] border border-[#E5DFDA] p-4 sm:p-5 rounded-3xl gap-4 shadow-sm"
+                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#EFEAE5] border p-4 sm:p-5 rounded-3xl gap-4 shadow-sm transition-all ${
+                      isExceedingStock ? "border-rose-400 bg-rose-50/40" : "border-[#E5DFDA]"
+                    }`}
                   >
                     <div className="flex items-center space-x-4 w-full sm:w-auto">
                       <div className="w-20 h-20 bg-[#FAF7F5] border border-[#E5DFDA] rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center p-2">
@@ -112,6 +143,24 @@ export default function CartPage() {
                             Size: <span className="text-[#8C5E73]">{item.selectedSize}</span>
                           </p>
                         )}
+                        {liveStockMap[item._id] !== undefined && (
+                          <p
+                            className={`text-[11px] font-semibold mt-1 flex items-center gap-1 ${
+                              availableStock === 0
+                                ? "text-rose-600"
+                                : availableStock < 5
+                                ? "text-amber-700"
+                                : "text-emerald-700"
+                            }`}
+                          >
+                            {isExceedingStock && <AlertCircle size={12} />}
+                            <span>
+                              {availableStock === 0
+                                ? "Out of stock"
+                                : `In Stock: ${availableStock} left`}
+                            </span>
+                          </p>
+                        )}
                         <div className="flex items-center text-[#1A120E] font-serif font-extrabold text-sm mt-1 sm:hidden">
                           <span>{convertPrice(item.price * item.quantity)}</span>
                         </div>
@@ -125,6 +174,7 @@ export default function CartPage() {
                           onClick={() => {
                             if (item.quantity > 1) {
                               addToCart(item, -1);
+                              router.refresh();
                               toast.success("Quantity updated");
                             }
                           }}
@@ -137,7 +187,12 @@ export default function CartPage() {
                         </span>
                         <button
                           onClick={() => {
+                            if (item.quantity >= availableStock) {
+                              toast.error(`Sirf ${availableStock} pieces stock mein available hain!`);
+                              return;
+                            }
                             addToCart(item, 1);
+                            router.refresh();
                             toast.success("Quantity updated");
                           }}
                           className="p-1.5 hover:bg-[#EFEAE5] rounded-full text-[#5E4E46] transition-colors cursor-pointer"
@@ -153,6 +208,7 @@ export default function CartPage() {
                       <button
                         onClick={() => {
                           removeFromCart(item._id, item.selectedSize);
+                          router.refresh();
                           toast.info("Item removed from cart");
                         }}
                         className="p-2 text-rose-600 hover:bg-rose-100/50 rounded-full transition-colors cursor-pointer"

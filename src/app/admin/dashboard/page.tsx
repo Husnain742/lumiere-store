@@ -52,8 +52,8 @@ export default function AdminDashboard() {
   const router = useRouter();
   
   const [activeTab, setActiveTab] = useState("overview");
-  const [dateFilter, setDateFilter] = useState("7days"); // today, 7days, 30days, all
-  const [mobileAdminMenuOpen, setMobileAdminMenuOpen] = useState(false); // Mobile Menu Toggle State
+  const [dateFilter, setDateFilter] = useState("7days");
+  const [mobileAdminMenuOpen, setMobileAdminMenuOpen] = useState(false);
 
   const [orders, setOrders] = useState<any[]>([]);
   const [orderLoading, setOrderLoading] = useState(true);
@@ -152,6 +152,7 @@ export default function AdminDashboard() {
       });
       if (res.data.success) {
         toast.success("Announcement banner updated successfully!");
+        router.refresh();
       }
     } catch (err) {
       toast.error("Failed to update announcement");
@@ -170,6 +171,7 @@ export default function AdminDashboard() {
         setCoupons([res.data.coupon, ...coupons]);
         setCouponForm({ code: "", discountPercentage: "", expiryDate: "" });
         toast.success("Coupon created successfully!");
+        router.refresh();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to create coupon");
@@ -185,6 +187,7 @@ export default function AdminDashboard() {
       if (res.data.success) {
         setCoupons(coupons.filter((c) => c._id !== id));
         toast.success("Coupon deleted");
+        router.refresh();
       }
     } catch (err) {
       console.error("Failed to delete coupon:", err);
@@ -199,6 +202,7 @@ export default function AdminDashboard() {
       if (res.status === 200) {
         setOrders(orders.map(order => order._id === orderId ? { ...order, status: newStatus } : order));
         toast.success(`Order status updated to ${newStatus}`);
+        router.refresh();
       }
     } catch (err) {
       console.error("Failed to update status:", err);
@@ -215,6 +219,7 @@ export default function AdminDashboard() {
       if (res.data.success) {
         setProducts(products.filter(p => p._id !== id));
         toast.success("Product deleted successfully");
+        router.refresh();
       }
     } catch (err) {
       console.error("Failed to delete product:", err);
@@ -250,6 +255,7 @@ export default function AdminDashboard() {
         setProducts(products.map(p => p._id === editingProduct._id ? res.data.product : p));
         setEditingProduct(null);
         toast.success("Product updated successfully! ✨");
+        router.refresh();
       }
     } catch (err) {
       console.error("Failed to update product:", err);
@@ -400,9 +406,8 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-       <main className="flex-grow p-4 sm:p-8 pt-20 sm:pt-24 space-y-8 overflow-y-auto">
+        <main className="flex-grow p-4 sm:p-8 pt-20 sm:pt-24 space-y-8 overflow-y-auto">
           
-          {/* Mobile Admin Menu Bar */}
           <div className="md:hidden bg-[#2A1424] text-white p-4 rounded-2xl flex items-center justify-between shadow-md">
             <div className="flex items-center space-x-2">
               <Store size={18} className="text-[#D9C4CF]" />
@@ -417,7 +422,6 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* Mobile Dropdown Drawer */}
           {mobileAdminMenuOpen && (
             <div className="md:hidden bg-[#2A1424] text-[#EFEAE5] p-3 rounded-2xl grid grid-cols-2 gap-2 border border-[#3D2036] shadow-xl">
               {[

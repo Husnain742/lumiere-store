@@ -167,6 +167,7 @@ function ProductDetailContent() {
 
     addToCart(productForCart, quantity);
     setAdded(true);
+    router.refresh();
     toast.success(`Added ${product.title} (${selectedSize}) to cart! 🛒`);
     setTimeout(() => setAdded(false), 2500);
   };

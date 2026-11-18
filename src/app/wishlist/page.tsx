@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useWishlist } from "@/context/WishlistContext";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist } = useWishlist();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,19 +25,30 @@ export default function WishlistPage() {
 
       {/* Main Container with proper top padding to prevent navbar overlap */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-12 flex-grow w-full">
-        <div className="flex items-center justify-between mb-8 border-b border-[#E5DFDA] pb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 border-b border-[#E5DFDA] pb-6 gap-3">
           <div>
             <h1 className="text-3xl font-serif font-bold text-[#1A120E]">My Wishlist</h1>
             <p className="text-sm text-[#5E4E46] mt-1">
               Save your favorite luxury pieces for later. ({wishlist.length} items)
             </p>
           </div>
-          <Link
-            href="/products"
-            className="text-sm font-medium text-[#8C5E73] hover:underline cursor-pointer"
-          >
-            Continue Shopping &rarr;
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                router.refresh();
+                toast.success("Wishlist synchronized!");
+              }}
+              className="bg-[#EFEAE5] hover:bg-[#E5DFDA] border border-[#E5DFDA] text-[#8C5E73] text-xs font-semibold px-4 py-2 rounded-full transition-all cursor-pointer shadow-xs"
+            >
+              ↻ Refresh
+            </button>
+            <Link
+              href="/products"
+              className="text-sm font-medium text-[#8C5E73] hover:underline cursor-pointer"
+            >
+              Continue Shopping &rarr;
+            </Link>
+          </div>
         </div>
 
         {wishlist.length === 0 ? (
@@ -64,6 +77,7 @@ export default function WishlistPage() {
                   <button
                     onClick={() => {
                       removeFromWishlist(item._id);
+                      router.refresh();
                       toast.info("Removed from wishlist");
                     }}
                     className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-md p-2 rounded-full text-red-500 hover:bg-white transition shadow-sm cursor-pointer"

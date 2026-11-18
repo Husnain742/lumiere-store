@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import axios from "axios";
 import { getServerSession } from "next-auth";
-import { ratelimit } from "@/lib/ratelimit"; // Rate limiter import kiya
+import { ratelimit } from "@/lib/ratelimit";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -28,7 +28,10 @@ const ProductSchema = new mongoose.Schema({
   saleEndDate: Date,
 }, { strict: false });
 
-const Product = mongoose.models.Product || mongoose.model("Product", ProductSchema);
+if (mongoose.models.Product) {
+  delete mongoose.models.Product;
+}
+const Product = mongoose.model("Product", ProductSchema);
 
 // Coupon Schema
 const CouponSchema = new mongoose.Schema({
@@ -38,7 +41,10 @@ const CouponSchema = new mongoose.Schema({
   isActive: Boolean,
 });
 
-const Coupon = mongoose.models.Coupon || mongoose.model("Coupon", CouponSchema);
+if (mongoose.models.Coupon) {
+  delete mongoose.models.Coupon;
+}
+const Coupon = mongoose.model("Coupon", CouponSchema);
 
 // Order Schema
 const OrderSchema = new mongoose.Schema({
@@ -107,26 +113,16 @@ async function sendWhatsAppNotification(phone: string, message: string) {
   }
 }
 
-// POST: Order Creation
+// POST: Order Creation (Stock instantly decreases here)
 export async function POST(req: Request) {
   try {
-    // 1. Rate Limiting Check (Fake orders aur WhatsApp spam rokne ke liye)
     const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
     const { success, limit, reset, remaining } = await ratelimit.limit(ip);
 
     if (!success) {
       return NextResponse.json(
-        { 
-          message: "Bohat ziyaada order requests aa gayi hain. Baraye meharbaani kuch der baad koshish karein." 
-        }, 
-        { 
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
-          }
-        }
+        { message: "Bohat ziyaada order requests aa gayi hain. Baraye meharbaani kuch der baad koshish karein." }, 
+        { status: 429 }
       );
     }
 
@@ -148,20 +144,23 @@ export async function POST(req: Request) {
 
     for (const item of items) {
       const quantity = Number(item.quantity);
-      if (!item._id || isNaN(quantity) || quantity <= 0) {
-        return NextResponse.json({ message: "Invalid item quantity detected." }, { status: 400 });
+      const prodId = item._id || item.productId;
+      
+      if (!prodId || isNaN(quantity) || quantity <= 0) {
+        return NextResponse.json({ message: "Invalid item quantity or product ID detected." }, { status: 400 });
       }
 
-      const dbProduct = await Product.findById(item._id);
+      // Safe query with MongoDB ObjectId validation
+      const dbProduct = await Product.findById(prodId);
       if (!dbProduct) {
-        return NextResponse.json({ message: "Product not found." }, { status: 404 });
+        console.error(`❌ Product not found for ID: ${prodId}`);
+        return NextResponse.json({ message: `Product not found: ${prodId}` }, { status: 404 });
       }
 
       if ((dbProduct.stock ?? 0) < quantity) {
-        return NextResponse.json({ message: `Insufficient stock for "${dbProduct.title}".` }, { status: 400 });
+        return NextResponse.json({ message: `Insufficient stock for "${dbProduct.title}". Available: ${dbProduct.stock}` }, { status: 400 });
       }
 
-      // Check if Flash Sale is active server-side
       const isSaleActive = dbProduct.saleEndDate ? new Date().getTime() < new Date(dbProduct.saleEndDate).getTime() : false;
       const hasDiscount = Boolean(dbProduct.discountPercentage && dbProduct.discountPercentage > 0 && isSaleActive);
       const originalPrice = Number(dbProduct.price);
@@ -178,7 +177,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Verify Coupon Code if supplied from Checkout
     let discountAmount = 0;
     let appliedCouponName = null;
 
@@ -192,10 +190,12 @@ export async function POST(req: Request) {
 
     const finalTotalAmount = Math.max(0, subtotal - discountAmount);
 
+    // INSTANT STOCK DECREASE WHEN ORDER IS PLACED
     for (const vItem of verifiedItems) {
-      await Product.findByIdAndUpdate(vItem._id, {
+      const updateResult = await Product.findByIdAndUpdate(vItem._id, {
         $inc: { stock: -vItem.quantity },
       });
+      console.log(`📦 Stock updated for product ${vItem.title}: -${vItem.quantity}`, updateResult);
     }
 
     const isCard = customerDetails.paymentMethod === "card";
@@ -226,7 +226,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: "Order placed successfully", orderId: newOrder._id }, { status: 201 });
   } catch (error: any) {
-    console.error("Error saving order:", error);
+    console.error("❌ Error saving order / decreasing stock:", error);
     return NextResponse.json({ message: "Internal Server Error", error: error.message }, { status: 500 });
   }
 }
@@ -259,7 +259,7 @@ export async function GET(req: Request) {
   }
 }
 
-// PATCH: Admin Status Update
+// PATCH: Admin Status Update (Handles Admin changes cleanly without messing with stock)
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession();
@@ -275,10 +275,28 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "Order ID and status are required" }, { status: 400 });
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
-    if (!updatedOrder) {
+    const existingOrder = await Order.findById(orderId);
+    if (!existingOrder) {
       return NextResponse.json({ message: "Order not found" }, { status: 404 });
     }
+
+    // If admin explicitly cancels an order from dashboard, restore stock back
+    if (status === "Cancelled" && existingOrder.status !== "Cancelled") {
+      if (existingOrder.items && Array.isArray(existingOrder.items)) {
+        for (const item of existingOrder.items) {
+          const productId = item._id || item.productId;
+          const qty = Number(item.quantity) || 1;
+          if (productId) {
+            await Product.findByIdAndUpdate(productId, {
+              $inc: { stock: qty }
+            });
+            console.log(`🔄 Stock restored for cancelled order item ${productId}: +${qty}`);
+          }
+        }
+      }
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
 
     const customerPhone = updatedOrder.customerDetails?.phone;
     const customerName = updatedOrder.customerDetails?.fullName || "Customer";

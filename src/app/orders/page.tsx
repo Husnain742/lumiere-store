@@ -43,7 +43,7 @@ export default function MyOrdersPage() {
     }
   };
 
-  // Order Cancellation Handler with Time Check (e.g., within 30 minutes)
+  // Order Cancellation Handler with Time Check (within 30 minutes)
   const handleCancelOrder = async (orderId: string, createdAt: string) => {
     const orderTime = new Date(createdAt).getTime();
     const currentTime = new Date().getTime();
@@ -63,7 +63,13 @@ export default function MyOrdersPage() {
       const res = await axios.put(`/api/orders/${orderId}`, { status: "Cancelled" });
       if (res.data.success || res.status === 200) {
         toast.success("Order kamyabi se cancel ho gaya hai.");
-        fetchUserOrders(); // Refresh orders list
+        
+        // Instant state update aur background router refresh taake stock aur orders foran sync ho jayein
+        setOrders((prevOrders) =>
+          prevOrders.map((ord) => (ord._id === orderId ? { ...ord, status: "Cancelled" } : ord))
+        );
+        router.refresh();
+        fetchUserOrders();
       } else {
         toast.error("Order cancel karne mein nakami hui.");
       }
@@ -87,11 +93,22 @@ export default function MyOrdersPage() {
     <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      {/* Added proper pt-24 sm:pt-28 to prevent navbar overlap on mobile */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full space-y-6">
-        <div className="border-b border-[#E5DFDA] pb-4">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1A120E]">My Orders History</h1>
-          <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">Track the live status of your purchases and shipping updates. You can cancel pending orders within 30 minutes.</p>
+        <div className="border-b border-[#E5DFDA] pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1A120E]">My Orders History</h1>
+            <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">Track the live status of your purchases and shipping updates. You can cancel pending orders within 30 minutes.</p>
+          </div>
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchUserOrders();
+              toast.success("Orders list synchronized!");
+            }}
+            className="px-4 py-2 bg-[#EFEAE5] hover:bg-[#E5DFDA] border border-[#E5DFDA] text-[#8C5E73] rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs"
+          >
+            ↻ Refresh Status
+          </button>
         </div>
 
         {orders.length === 0 ? (
@@ -107,7 +124,6 @@ export default function MyOrdersPage() {
             {orders.map((order) => {
               const orderStatus = order.status || "Pending";
               
-              // Check if order is eligible for cancellation (Pending & within 30 minutes)
               const orderTime = new Date(order.createdAt).getTime();
               const currentTime = new Date().getTime();
               const diffInMinutes = (currentTime - orderTime) / (1000 * 60);
@@ -158,7 +174,6 @@ export default function MyOrdersPage() {
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                       <span className="text-[#8C5E73] uppercase tracking-wider text-[11px] font-semibold">Payment: {order.customerDetails?.paymentMethod || "COD"}</span>
                       
-                      {/* Cancel Order Button (Active only within 30 mins for Pending orders) */}
                       {canCancel && (
                         <button
                           onClick={() => handleCancelOrder(order._id, order.createdAt)}
@@ -176,7 +191,6 @@ export default function MyOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Interactive Visual Timeline */}
                   <OrderTimeline status={orderStatus} />
                 </motion.div>
               );
