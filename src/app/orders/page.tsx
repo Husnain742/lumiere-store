@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import OrderTimeline from "@/components/OrderTimeline";
 import { motion } from "framer-motion";
-import { Package, Loader2, ShoppingBag, CheckCircle2, Clock, Truck, XCircle } from "lucide-react";
+import { Package, Loader2, ShoppingBag, CheckCircle2, Clock, Truck, XCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ export default function MyOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -42,6 +43,38 @@ export default function MyOrdersPage() {
     }
   };
 
+  // Order Cancellation Handler with Time Check (e.g., within 30 minutes)
+  const handleCancelOrder = async (orderId: string, createdAt: string) => {
+    const orderTime = new Date(createdAt).getTime();
+    const currentTime = new Date().getTime();
+    const diffInMinutes = (currentTime - orderTime) / (1000 * 60);
+
+    if (diffInMinutes > 30) {
+      toast.error("Order cancel karne ka waqt (30 minutes) guzar chuka hai!");
+      return;
+    }
+
+    if (!window.confirm("Kya aap waqai apna yeh order cancel karna chahte hain?")) {
+      return;
+    }
+
+    setCancellingId(orderId);
+    try {
+      const res = await axios.put(`/api/orders/${orderId}`, { status: "Cancelled" });
+      if (res.data.success || res.status === 200) {
+        toast.success("Order kamyabi se cancel ho gaya hai.");
+        fetchUserOrders(); // Refresh orders list
+      } else {
+        toast.error("Order cancel karne mein nakami hui.");
+      }
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+      toast.error("Server error ki wajah se order cancel nahi ho saka.");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-[#FAF7F5] flex items-center justify-center">
@@ -58,7 +91,7 @@ export default function MyOrdersPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-12 flex-grow w-full space-y-6">
         <div className="border-b border-[#E5DFDA] pb-4">
           <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#1A120E]">My Orders History</h1>
-          <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">Track the live status of your purchases and shipping updates.</p>
+          <p className="text-xs sm:text-sm text-[#5E4E46] mt-1">Track the live status of your purchases and shipping updates. You can cancel pending orders within 30 minutes.</p>
         </div>
 
         {orders.length === 0 ? (
@@ -73,6 +106,13 @@ export default function MyOrdersPage() {
           <div className="space-y-4">
             {orders.map((order) => {
               const orderStatus = order.status || "Pending";
+              
+              // Check if order is eligible for cancellation (Pending & within 30 minutes)
+              const orderTime = new Date(order.createdAt).getTime();
+              const currentTime = new Date().getTime();
+              const diffInMinutes = (currentTime - orderTime) / (1000 * 60);
+              const canCancel = orderStatus === "Pending" && diffInMinutes <= 30;
+
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -84,7 +124,7 @@ export default function MyOrdersPage() {
                     <div>
                       <span className="text-xs text-[#5E4E46] font-medium">Order ID: </span>
                       <span className="font-mono text-xs text-[#8C5E73] font-bold">#{order._id.slice(-6).toUpperCase()}</span>
-                      <span className="text-xs text-[#8A7A72] ml-3 font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-[#8A7A72] ml-3 font-medium">{new Date(order.createdAt).toLocaleString()}</span>
                     </div>
 
                     {/* Status Badge */}
@@ -112,9 +152,28 @@ export default function MyOrdersPage() {
                     ))}
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-[#E5DFDA] text-xs sm:text-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-2 border-t border-[#E5DFDA] text-xs sm:text-sm gap-4">
                     <span className="text-[#5E4E46] font-medium">Total Bill: <strong className="text-[#1A120E] font-serif font-extrabold text-base">Rs. {order.totalAmount?.toLocaleString()}</strong></span>
-                    <span className="text-[#8C5E73] uppercase tracking-wider text-[11px] font-semibold">Payment: {order.customerDetails?.paymentMethod || "COD"}</span>
+                    
+                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                      <span className="text-[#8C5E73] uppercase tracking-wider text-[11px] font-semibold">Payment: {order.customerDetails?.paymentMethod || "COD"}</span>
+                      
+                      {/* Cancel Order Button (Active only within 30 mins for Pending orders) */}
+                      {canCancel && (
+                        <button
+                          onClick={() => handleCancelOrder(order._id, order.createdAt)}
+                          disabled={cancellingId === order._id}
+                          className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2 rounded-full transition-all shadow-sm flex items-center space-x-1 cursor-pointer disabled:opacity-50"
+                        >
+                          {cancellingId === order._id ? (
+                            <Loader2 className="animate-spin w-3.5 h-3.5" />
+                          ) : (
+                            <XCircle size={14} />
+                          )}
+                          <span>Cancel Order</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Interactive Visual Timeline */}

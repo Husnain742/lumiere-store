@@ -15,7 +15,9 @@ import {
   LayoutDashboard,
   PackageCheck,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Tag,
+  Percent
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
@@ -84,13 +86,46 @@ export default function Navbar() {
 
   return (
     <>
-      {/* 🌟 FIXED NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-50 bg-[#E5DDD5]/95 backdrop-blur-md border-b border-[#EFECE6] shadow-sm transition-all duration-300">
+      {/* 🌟 FIXED NAVBAR WITH ULTRA-ATTRACTIVE ANIMATED ANNOUNCEMENT BAR */}
+      <nav className="fixed top-0 left-0 w-full z-50 bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#E5DFDA] shadow-sm transition-all duration-300">
         
+        {/* 🔥 Tگڑا & Highly Animated Eye-Catching Offer Banner */}
         {announcement?.isActive && (
-          <div className="bg-[#8C5E73] text-white text-center py-2 px-4 text-xs font-medium tracking-wide flex items-center justify-center space-x-2 shadow-inner">
-            <span>{announcement.text} <strong className="underline uppercase font-bold tracking-wider">{announcement.couponCode}</strong> ✨</span>
-          </div>
+          <motion.div 
+            animate={{ 
+              background: [
+                "linear-gradient(90deg, #784E60 0%, #8C5E73 50%, #784E60 100%)",
+                "linear-gradient(90deg, #8C5E73 0%, #A26E86 50%, #8C5E73 100%)",
+                "linear-gradient(90deg, #784E60 0%, #8C5E73 50%, #784E60 100%)"
+              ]
+            }}
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            className="text-white text-center py-3 px-4 text-xs sm:text-sm font-bold tracking-wide flex items-center justify-center space-x-2 shadow-lg relative overflow-hidden border-b border-white/20"
+          >
+            <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none" />
+            
+            <motion.div
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            >
+              <Percent size={18} className="text-amber-300 fill-amber-300 shrink-0" />
+            </motion.div>
+
+            <span className="relative z-10 flex items-center gap-2 flex-wrap justify-center text-center">
+              <span className="tracking-wide text-white drop-shadow-sm font-semibold">
+                {announcement.text || "🔥 Special Limited Offer: Get 20% OFF using code"}
+              </span>
+              
+              <motion.span 
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ repeat: Infinity, duration: 1.2 }}
+                className="bg-white text-[#8C5E73] border-2 border-amber-300 px-3 py-0.5 rounded-full font-extrabold tracking-widest shadow-md inline-flex items-center gap-1.5"
+              >
+                <Tag size={13} className="text-[#8C5E73]" /> 
+                {announcement.couponCode || "LUMIERE20"}
+              </motion.span>
+            </span>
+          </motion.div>
         )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,7 +138,7 @@ export default function Navbar() {
               >
                 <ShoppingBag size={20} />
               </motion.div>
-              <span className="text-2xl font-serif tracking-wide text-[#4A403A] group-hover:text-[#8C5E73] transition-colors">
+              <span className="text-2xl font-serif tracking-wide text-[#2C2420] group-hover:text-[#8C5E73] transition-colors">
                 Lumière
               </span>
             </Link>
@@ -111,7 +146,7 @@ export default function Navbar() {
             <div className="hidden md:flex flex-1 max-w-sm mx-6 relative" ref={searchRef}>
               <div className="relative w-full">
                 <Search
-                  className="absolute left-4 top-3 text-[#9A8A82]"
+                  className="absolute left-4 top-3 text-[#8A7A72]"
                   size={16}
                 />
                 <input
@@ -123,12 +158,12 @@ export default function Navbar() {
                     setIsSearching(true);
                   }}
                   onFocus={() => setIsSearching(true)}
-                  className="w-full bg-[#F3ECE7] border border-[#E5DDD7] rounded-full py-2.5 pl-11 pr-10 text-xs sm:text-sm text-[#4A403A] placeholder-[#A3958D] focus:outline-none focus:border-[#8C5E73] focus:bg-white transition-all shadow-inner"
+                  className="w-full bg-[#EFEAE5] border border-[#E5DFDA] rounded-full py-2.5 pl-11 pr-10 text-xs sm:text-sm text-[#1A120E] placeholder-[#8A7A72] focus:outline-none focus:border-[#8C5E73] focus:bg-white transition-all shadow-inner font-medium"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3.5 top-3 text-[#9A8A82] hover:text-[#4A403A] cursor-pointer"
+                    className="absolute right-3.5 top-3 text-[#8A7A72] hover:text-[#1A120E] cursor-pointer"
                   >
                     <X size={16} />
                   </button>
@@ -141,10 +176,10 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                    className="absolute top-14 left-0 right-0 bg-white border border-[#EFECE6] rounded-3xl shadow-xl overflow-hidden z-50 max-h-96 overflow-y-auto divide-y divide-[#F5F2EE]"
+                    className="absolute top-14 left-0 right-0 bg-[#EFEAE5] border border-[#E5DFDA] rounded-3xl shadow-xl overflow-hidden z-50 max-h-96 overflow-y-auto divide-y divide-[#E5DFDA]"
                   >
                     {filteredProducts.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-[#8C7A72]">
+                      <div className="p-4 text-center text-xs text-[#5E4E46]">
                         No products found matching "{searchQuery}"
                       </div>
                     ) : (
@@ -158,18 +193,18 @@ export default function Navbar() {
                               setIsSearching(false);
                               setSearchQuery("");
                             }}
-                            className="flex items-center justify-between p-3.5 hover:bg-[#FAF7F5] transition-colors cursor-pointer"
+                            className="flex items-center justify-between p-3.5 hover:bg-white transition-colors cursor-pointer"
                           >
                             <div className="flex items-center space-x-3">
-                              <img src={img} alt={product.title} className="w-10 h-10 rounded-xl object-cover border border-[#EFECE6]" />
+                              <img src={img} alt={product.title} className="w-10 h-10 rounded-xl object-cover border border-[#E5DFDA]" />
                               <div>
-                                <p className="text-xs font-medium text-[#4A403A] line-clamp-1">{product.title}</p>
-                                <span className="text-[10px] text-[#8C5E73] uppercase font-semibold px-2 py-0.5 bg-[#F7EBEF] rounded-md">
+                                <p className="text-xs font-semibold text-[#1A120E] line-clamp-1">{product.title}</p>
+                                <span className="text-[10px] text-[#8C5E73] uppercase font-bold px-2 py-0.5 bg-[#F7EBEF] rounded-md">
                                   {product.category || "General"}
                                 </span>
                               </div>
                             </div>
-                            <p className="text-xs font-bold text-[#8C5E73]">Rs. {product.price?.toLocaleString()}</p>
+                            <p className="text-xs font-serif font-bold text-[#8C5E73]">Rs. {product.price?.toLocaleString()}</p>
                           </Link>
                         );
                       })
@@ -182,13 +217,13 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-6">
               <Link
                 href="/"
-                className="text-sm font-medium text-[#6B5E57] hover:text-[#8C5E73] transition-colors"
+                className="text-sm font-semibold text-[#5E4E46] hover:text-[#8C5E73] transition-colors"
               >
                 Home
               </Link>
               <Link
                 href="/products"
-                className="text-sm font-medium text-[#6B5E57] hover:text-[#8C5E73] transition-colors"
+                className="text-sm font-semibold text-[#5E4E46] hover:text-[#8C5E73] transition-colors"
               >
                 Shop
               </Link>
@@ -196,7 +231,7 @@ export default function Navbar() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="bg-[#F3ECE7] border border-[#E5DDD7] text-[#4A403A] text-xs font-bold rounded-xl px-2.5 py-2 focus:outline-none focus:border-[#8C5E73] cursor-pointer shadow-inner"
+                className="bg-[#EFEAE5] border border-[#E5DFDA] text-[#1A120E] text-xs font-bold rounded-xl px-2.5 py-2 focus:outline-none focus:border-[#8C5E73] cursor-pointer shadow-inner"
               >
                 <option value="PKR">PKR (Rs.)</option>
                 <option value="USD">USD ($)</option>
@@ -205,7 +240,7 @@ export default function Navbar() {
 
               <Link
                 href="/cart"
-                className="relative p-2 text-[#6B5E57] hover:text-[#8C5E73] transition-colors"
+                className="relative p-2 text-[#5E4E46] hover:text-[#8C5E73] transition-colors"
               >
                 <ShoppingBag size={21} />
                 {mounted && totalItemsCount > 0 && (
@@ -243,13 +278,13 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-3 w-56 bg-white border border-[#EFECE6] rounded-2xl shadow-xl py-2 z-50"
+                        className="absolute right-0 mt-3 w-56 bg-[#EFEAE5] border border-[#E5DFDA] rounded-2xl shadow-xl py-2 z-50"
                       >
-                        <div className="px-4 py-2.5 border-b border-[#F5F2EE]">
-                          <p className="text-sm font-semibold text-[#4A403A] truncate">
+                        <div className="px-4 py-2.5 border-b border-[#E5DFDA]">
+                          <p className="text-sm font-bold text-[#1A120E] truncate">
                             {session.user?.name}
                           </p>
-                          <p className="text-xs text-[#8C7A72] truncate">
+                          <p className="text-xs text-[#5E4E46] truncate">
                             {session.user?.email}
                           </p>
                         </div>
@@ -257,7 +292,7 @@ export default function Navbar() {
                         <Link
                           href="/orders"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#6B5E57] hover:bg-[#FAF7F5] hover:text-[#8C5E73] transition-colors"
+                          className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#5E4E46] hover:bg-white hover:text-[#8C5E73] transition-colors font-medium"
                         >
                           <PackageCheck size={16} className="text-[#8C5E73]" />
                           <span>My Orders</span>
@@ -268,7 +303,7 @@ export default function Navbar() {
                             <Link
                               href="/admin/dashboard"
                               onClick={() => setUserDropdownOpen(false)}
-                              className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#8C5E73] hover:bg-[#FAF7F5] font-semibold transition-colors"
+                              className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#8C5E73] hover:bg-white font-bold transition-colors"
                             >
                               <LayoutDashboard size={16} />
                               <span>Admin Dashboard</span>
@@ -277,7 +312,7 @@ export default function Navbar() {
                             <Link
                               href="/admin/add-product"
                               onClick={() => setUserDropdownOpen(false)}
-                              className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#6B5E57] hover:bg-[#FAF7F5] hover:text-[#8C5E73] transition-colors"
+                              className="flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-[#5E4E46] hover:bg-white hover:text-[#8C5E73] transition-colors font-medium"
                             >
                               <PlusCircle size={16} />
                               <span>Add Product</span>
@@ -287,7 +322,7 @@ export default function Navbar() {
 
                         <button
                           onClick={() => signOut()}
-                          className="w-full text-left flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-rose-600 hover:bg-rose-50 transition-colors border-t border-[#F5F2EE] mt-1 cursor-pointer"
+                          className="w-full text-left flex items-center space-x-2.5 px-4 py-2.5 text-xs sm:text-sm text-rose-600 hover:bg-rose-50 transition-colors border-t border-[#E5DFDA] mt-1 cursor-pointer font-semibold"
                         >
                           <LogOut size={16} />
                           <span>Sign Out</span>
@@ -301,7 +336,7 @@ export default function Navbar() {
                   <motion.button
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className="bg-[#8C5E73] hover:bg-[#784E60] text-white text-xs sm:text-sm font-medium px-5 py-2.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all cursor-pointer"
+                    className="bg-[#8C5E73] hover:bg-[#784E60] text-white text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-full shadow-md shadow-[#8C5E73]/25 transition-all cursor-pointer"
                   >
                     Sign In
                   </motion.button>
@@ -313,7 +348,7 @@ export default function Navbar() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="bg-[#F3ECE7] border border-[#E5DDD7] text-[#4A403A] text-[11px] font-bold rounded-lg px-2 py-1.5 focus:outline-none"
+                className="bg-[#EFEAE5] border border-[#E5DFDA] text-[#1A120E] text-[11px] font-bold rounded-lg px-2 py-1.5 focus:outline-none"
               >
                 <option value="PKR">PKR</option>
                 <option value="USD">USD</option>
@@ -322,7 +357,7 @@ export default function Navbar() {
 
               <Link
                 href="/cart"
-                className="relative p-2 text-[#6B5E57]"
+                className="relative p-2 text-[#5E4E46]"
               >
                 <ShoppingBag size={21} />
                 {mounted && totalItemsCount > 0 && (
@@ -334,7 +369,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-[#6B5E57] hover:text-[#4A403A] p-2 cursor-pointer"
+                className="text-[#5E4E46] hover:text-[#1A120E] p-2 cursor-pointer"
               >
                 {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -348,11 +383,11 @@ export default function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-[#FAF7F5] border-b border-[#EFECE6] px-5 pt-3 pb-6 space-y-4 shadow-lg"
+              className="md:hidden bg-[#EFEAE5] border-b border-[#E5DFDA] px-5 pt-3 pb-6 space-y-4 shadow-lg"
             >
               <div className="relative w-full">
                 <Search
-                  className="absolute left-3.5 top-2.5 text-[#9A8A82]"
+                  className="absolute left-3.5 top-2.5 text-[#8A7A72]"
                   size={16}
                 />
                 <input
@@ -360,12 +395,12 @@ export default function Navbar() {
                   placeholder="Search products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white border border-[#EFECE6] rounded-full py-2 pl-10 pr-4 text-xs text-[#4A403A] placeholder-[#A3958D] focus:outline-none focus:border-[#8C5E73]"
+                  className="w-full bg-white border border-[#E5DFDA] rounded-full py-2 pl-10 pr-4 text-xs text-[#1A120E] placeholder-[#8A7A72] focus:outline-none focus:border-[#8C5E73]"
                 />
               </div>
 
               {searchQuery.trim() !== "" && (
-                <div className="bg-white rounded-2xl p-2 space-y-2 max-h-60 overflow-y-auto border border-[#EFECE6]">
+                <div className="bg-white rounded-2xl p-2 space-y-2 max-h-60 overflow-y-auto border border-[#E5DFDA]">
                   {filteredProducts.map((p) => (
                     <Link
                       key={p._id}
@@ -374,7 +409,7 @@ export default function Navbar() {
                         setMobileMenuOpen(false);
                         setSearchQuery("");
                       }}
-                      className="flex items-center space-x-2 text-xs text-[#4A403A] p-2 hover:bg-[#FAF7F5] rounded-xl"
+                      className="flex items-center space-x-2 text-xs text-[#1A120E] p-2 hover:bg-[#FAF7F5] rounded-xl font-medium"
                     >
                       <img src={p.image || p.images?.[0]} alt={p.title} className="w-8 h-8 rounded-lg object-cover" />
                       <span className="truncate">{p.title}</span>
@@ -386,7 +421,7 @@ export default function Navbar() {
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm text-[#4A403A] py-1 font-medium"
+                className="block text-sm text-[#1A120E] py-1 font-semibold"
               >
                 Home
               </Link>
@@ -394,21 +429,21 @@ export default function Navbar() {
               <Link
                 href="/products"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm text-[#4A403A] py-1 font-medium"
+                className="block text-sm text-[#1A120E] py-1 font-semibold"
               >
                 Shop Catalog
               </Link>
 
               {session ? (
-                <div className="pt-2 border-t border-[#EFECE6] space-y-2">
-                  <p className="text-xs text-[#8C7A72]">
-                    Signed in as <span className="text-[#4A403A] font-semibold">{session.user?.email}</span>
+                <div className="pt-2 border-t border-[#E5DFDA] space-y-2">
+                  <p className="text-xs text-[#5E4E46]">
+                    Signed in as <span className="text-[#1A120E] font-semibold">{session.user?.email}</span>
                   </p>
 
                   <Link
                     href="/orders"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 text-sm text-[#4A403A] py-1"
+                    className="flex items-center space-x-2 text-sm text-[#1A120E] py-1 font-medium"
                   >
                     <PackageCheck size={16} className="text-[#8C5E73]" />
                     <span>My Orders</span>
@@ -419,7 +454,7 @@ export default function Navbar() {
                       <Link
                         href="/admin/dashboard"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 text-sm text-[#8C5E73] py-1 font-semibold"
+                        className="flex items-center space-x-2 text-sm text-[#8C5E73] py-1 font-bold"
                       >
                         <LayoutDashboard size={16} />
                         <span>Admin Dashboard</span>
@@ -428,7 +463,7 @@ export default function Navbar() {
                       <Link
                         href="/admin/add-product"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 text-sm text-[#4A403A] py-1"
+                        className="flex items-center space-x-2 text-sm text-[#1A120E] py-1 font-medium"
                       >
                         <PlusCircle size={16} />
                         <span>Add Product</span>
@@ -437,7 +472,7 @@ export default function Navbar() {
                   )}
                   <button
                     onClick={() => signOut()}
-                    className="flex items-center space-x-2 text-sm text-rose-600 py-1 cursor-pointer"
+                    className="flex items-center space-x-2 text-sm text-rose-600 py-1 cursor-pointer font-semibold"
                   >
                     <LogOut size={16} />
                     <span>Sign Out</span>
@@ -447,7 +482,7 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center bg-[#8C5E73] text-white text-sm font-medium py-2.5 rounded-full mt-2"
+                  className="block text-center bg-[#8C5E73] text-white text-sm font-semibold py-2.5 rounded-full mt-2 shadow-sm"
                 >
                   Sign In
                 </Link>
@@ -457,8 +492,8 @@ export default function Navbar() {
         </AnimatePresence>
       </nav>
 
-      {/* ⚠️ Yeh line neechay wala content navbar ke neechay chupne se bachayegi */}
-      <div className="pt-6 sm:pt-28" />
+      {/* ⚠️ Safe Spacing Buffer to ensure proper gap and prevent overlapping on mobile/laptop */}
+      <div className="pt-32 sm:pt-40" />
 
       {/* Abandoned Cart Recovery Floating Popup */}
       <AnimatePresence>
