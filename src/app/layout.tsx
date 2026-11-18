@@ -31,7 +31,7 @@ export default function RootLayout({
 
               {/* 🌟 Professional Notification-Style WhatsApp Floating Button */}
               <a
-                href="https://wa.me/923001234567?text=Hello%20Lumière%20Support,%20I%20want%20to%20inquire%20about%20my%20order."
+                href="https://wa.me/923489266448?text=Hello%20Lumière%20Support,%20I%20want%20to%20inquire%20about%20my%20order."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="fixed bottom-6 right-6 z-50 group cursor-pointer"
