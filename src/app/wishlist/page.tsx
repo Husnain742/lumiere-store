@@ -5,7 +5,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import Link from "next/link";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { toast } from "sonner"; // <-- Sonner toast import kiya
+import { toast } from "sonner";
 
 export default function WishlistPage() {
   const { wishlist, removeFromWishlist } = useWishlist();
@@ -18,10 +18,11 @@ export default function WishlistPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans">
+    <div className="min-h-screen bg-[#FAF7F5] text-[#2C2420] font-sans flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Main Container with proper top padding to prevent navbar overlap */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-12 flex-grow w-full">
         <div className="flex items-center justify-between mb-8 border-b border-[#E5DFDA] pb-6">
           <div>
             <h1 className="text-3xl font-serif font-bold text-[#1A120E]">My Wishlist</h1>
@@ -31,7 +32,7 @@ export default function WishlistPage() {
           </div>
           <Link
             href="/products"
-            className="text-sm font-medium text-[#8C5E73] hover:underline"
+            className="text-sm font-medium text-[#8C5E73] hover:underline cursor-pointer"
           >
             Continue Shopping &rarr;
           </Link>
@@ -65,7 +66,7 @@ export default function WishlistPage() {
                       removeFromWishlist(item._id);
                       toast.info("Removed from wishlist");
                     }}
-                    className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-md p-2 rounded-full text-red-500 hover:bg-white transition shadow-sm cursor-pointer"
+                    className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-md p-2 rounded-full text-red-500 hover:bg-white transition shadow-sm cursor-pointer"
                     title="Remove from wishlist"
                   >
                     <Trash2 className="w-4 h-4" />
